@@ -10,11 +10,11 @@ import com.pushup.donstop.MainActivity
 import com.pushup.donstop.R
 
 class MainFragment : Fragment() {
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+
         val view = inflater.inflate(R.layout.fragment_main, container, false)
 
         val startButton: Button = view.findViewById(R.id.startButton)

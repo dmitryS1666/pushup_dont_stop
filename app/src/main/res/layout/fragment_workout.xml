@@ -5,8 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/background_gradient"
-    android:fitsSystemWindows="false">
+    android:background="@drawable/background_gradient">
 
     <!-- Верхняя панель -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -35,6 +34,7 @@
             android:layout_height="60dp"
             android:text="Push Up"
             app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="0dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"/>
@@ -52,21 +52,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/topBar">
 
-        <!-- Фон -->
+        <!-- Фоновое изображение: растягивается на весь фрейм -->
         <ImageView
             android:id="@+id/pushupBackground"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="180pt"
+            android:layout_height="280dp"
+            android:scaleType="fitXY"
+            android:layout_gravity="center"
             android:src="@drawable/push_up_bg" />
 
-        <!-- Основное изображение -->
         <ImageView
             android:id="@+id/pushupImage"
             android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:layout_marginLeft="45pt"
-            android:layout_marginTop="20dp"
-            android:scaleType="centerCrop"
+            android:layout_height="280dp"
+            android:layout_gravity="center"
+            android:scaleType="centerInside"
             android:src="@drawable/push_up" />
     </FrameLayout>
 

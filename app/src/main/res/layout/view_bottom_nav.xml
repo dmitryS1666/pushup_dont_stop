@@ -4,7 +4,7 @@
     android:layout_height="60dp"
     android:orientation="horizontal"
     android:gravity="center"
-    android:background="#004400">
+    android:background="#1DAA89">
 
     <!-- Пример элемента -->
     <LinearLayout
