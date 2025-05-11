@@ -13,11 +13,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
+import com.pushup.donstop.ui.CalendarFragment
 import com.pushup.donstop.ui.LoadingFragment
 import com.pushup.donstop.ui.MainFragment
 import com.pushup.donstop.ui.SettingsFragment
 import com.pushup.donstop.ui.WorkoutFragment
 import com.pushup.donstop.ui.theme.PushUpDontStopTheme
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
     private lateinit var bottomNav: View
@@ -27,6 +29,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = Color.TRANSPARENT
+
+        // Принудительно установить английскую локаль
+        val locale = Locale("en")
+        Locale.setDefault(locale)
 
         setContentView(R.layout.activity_main)
         if (savedInstanceState == null) {
@@ -115,7 +121,7 @@ class MainActivity : AppCompatActivity() {
         hideBottomNav()
 
         supportFragmentManager.beginTransaction()
-            .replace(R.id.mainFragmentContainer, MainFragment()) // или твой главный фрагмент
+            .replace(R.id.mainFragmentContainer, MainFragment())
             .commit()
     }
 
@@ -123,7 +129,7 @@ class MainActivity : AppCompatActivity() {
         showBottomNav()
 
         supportFragmentManager.beginTransaction()
-            .replace(R.id.mainFragmentContainer, WorkoutFragment()) // замените на свой фрагмент, если имя другое
+            .replace(R.id.mainFragmentContainer, WorkoutFragment())
             .addToBackStack(null)
             .commit()
     }

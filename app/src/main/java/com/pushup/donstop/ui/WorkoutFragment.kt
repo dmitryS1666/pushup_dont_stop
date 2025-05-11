@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.pushup.donstop.R
 import com.pushup.donstop.databinding.FragmentWorkoutBinding
 
 class WorkoutFragment : Fragment() {
@@ -62,6 +63,16 @@ class WorkoutFragment : Fragment() {
             stopTimer()
             toggleButtonVisibility()
         }
+
+        val calendarSection: View = view.findViewById(R.id.calendarIcon)
+
+        calendarSection.setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.mainFragmentContainer, CalendarFragment())
+                .addToBackStack(null)
+                .commit()
+        }
+
     }
 
     private fun toggleButtonVisibility() {
