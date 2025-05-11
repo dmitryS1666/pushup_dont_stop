@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -20,11 +19,11 @@
             android:id="@+id/calendarIcon"
             android:layout_width="24dp"
             android:layout_height="24dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginRight="15dp"
             android:src="@drawable/calendar"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginRight="15dp"
-            android:layout_marginTop="15dp"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
         <!-- Кнопка по центру -->
         <TextView
@@ -32,12 +31,12 @@
             style="@style/PushupBorderButton"
             android:layout_width="200dp"
             android:layout_height="60dp"
-            android:text="Push Up"
-            app:layout_constraintTop_toTopOf="parent"
             android:layout_marginTop="0dp"
-            app:layout_constraintStart_toStartOf="parent"
+            android:text="Push Up"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Блок с изображением — сразу под topBar -->
@@ -57,8 +56,8 @@
             android:id="@+id/pushupBackground"
             android:layout_width="180pt"
             android:layout_height="280dp"
-            android:scaleType="fitXY"
             android:layout_gravity="center"
+            android:scaleType="fitXY"
             android:src="@drawable/push_up_bg" />
 
         <ImageView
@@ -79,38 +78,41 @@
         app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/fragment_workout">
-    <TextView
-        android:id="@+id/sequenceText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="4 3 3 2 2"
-        android:textSize="24sp"
-        android:textColor="#FFFFFF"
-        android:layout_marginTop="10dp"
-        tools:ignore="NotSibling" />
+
+        <LinearLayout
+            android:id="@+id/sequenceLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/fragment_workout" />
     </LinearLayout>
 
-    <!-- Счётчик -->
-
-    <!-- Кнопка READY -->
+    <!-- Счётчик и таймер -->
     <LinearLayout
         android:id="@+id/counterLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:orientation="horizontal"
+        android:gravity="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/sequence">
 
+        <!-- Минус -->
         <Button
             android:id="@+id/minusButton"
             style="@style/PlainTextButton"
             android:layout_width="64dp"
             android:layout_height="match_parent"
-            android:text="−" />
+            android:text="−"
+            android:visibility="visible" />
 
+        <!-- Счётчик -->
         <TextView
             android:id="@+id/counterText"
             android:layout_width="wrap_content"
@@ -120,24 +122,50 @@
             android:paddingRight="50dp"
             android:text="4"
             android:textColor="#FFFFFF"
-            android:textSize="80sp" />
+            android:textSize="80sp"
+            android:visibility="visible" />
 
+        <!-- Таймер (скрыт по умолчанию) -->
+        <TextView
+            android:id="@+id/timerText"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:text="01:00"
+            android:textColor="#FFFFFF"
+            android:textSize="80sp"
+            android:visibility="gone" />
+
+        <!-- Плюс -->
         <Button
             android:id="@+id/plusButton"
             style="@style/PlainTextButton"
             android:layout_width="64dp"
             android:layout_height="match_parent"
-            android:text="+" />
+            android:text="+"
+            android:visibility="visible" />
     </LinearLayout>
 
     <Button
         android:id="@+id/readyButton"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        app:layout_constraintTop_toBottomOf="@id/counterLayout"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
         android:layout_marginTop="20dp"
-        android:background="@drawable/ready_button_selector"
-        android:gravity="center" />
+        android:background="@drawable/ready_button"
+        android:gravity="center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/counterLayout" />
+
+    <Button
+        android:id="@+id/stopButton"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/stop_button"
+        android:gravity="center"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/counterLayout" />
 </androidx.constraintlayout.widget.ConstraintLayout>

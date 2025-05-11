@@ -11,12 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
-import com.pushup.donstop.ui.InfoFragment
 import com.pushup.donstop.ui.LoadingFragment
 import com.pushup.donstop.ui.MainFragment
 import com.pushup.donstop.ui.SettingsFragment
@@ -52,17 +48,17 @@ class MainActivity : AppCompatActivity() {
 //            // Дополнительная логика для navParams
 //            openFragment(ParamsFragment()) // Пример, откройте фрагмент для navParams
 //        }
-//
+
 //        navPlan.setOnClickListener {
 //            System.out.println("navPlan")
 //            openFragment(PlanFragment()) // Пример, откройте фрагмент для navPlan
 //        }
-//
-//        navRun.setOnClickListener {
-//            System.out.println("navRun")
-//            openFragment(RunFragment()) // Пример, откройте фрагмент для navRun
-//        }
-//
+
+        navRun.setOnClickListener {
+            System.out.println("navRun")
+            openFragment(WorkoutFragment())
+        }
+
 //        navStat.setOnClickListener {
 //            System.out.println("navStat")
 //            openFragment(StatFragment()) // Пример, откройте фрагмент для navStat
@@ -70,7 +66,7 @@ class MainActivity : AppCompatActivity() {
 
         navSet.setOnClickListener {
             Log.d("MainActivity", "navSet clicked")
-            openFragment(SettingsFragment()) // Пример, откройте фрагмент для navStat
+            openFragment(SettingsFragment())
         }
     }
 
@@ -104,7 +100,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // Метод для скрытия панели навигации
-    private fun hideBottomNav() {
+    fun hideBottomNav() {
         bottomNav = findViewById(R.id.bottomNavInclude)
         bottomNav.visibility = View.GONE
     }
