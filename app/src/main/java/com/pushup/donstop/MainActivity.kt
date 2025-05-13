@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment
 import com.pushup.donstop.ui.CalendarFragment
 import com.pushup.donstop.ui.LoadingFragment
 import com.pushup.donstop.ui.MainFragment
+import com.pushup.donstop.ui.ParamFragment
 import com.pushup.donstop.ui.SettingsFragment
 import com.pushup.donstop.ui.WorkoutFragment
 import com.pushup.donstop.ui.theme.PushUpDontStopTheme
@@ -49,11 +50,11 @@ class MainActivity : AppCompatActivity() {
         val navSet: LinearLayout = findViewById(R.id.navSet)
 
         // Обработчики кликов для каждого элемента нижней панели
-//        navParams.setOnClickListener {
-//            System.out.println("navParams")
-//            // Дополнительная логика для navParams
-//            openFragment(ParamsFragment()) // Пример, откройте фрагмент для navParams
-//        }
+        navParams.setOnClickListener {
+            System.out.println("navParams")
+            hideBottomNav()
+            openFragment(ParamFragment())
+        }
 
 //        navPlan.setOnClickListener {
 //            System.out.println("navPlan")
@@ -62,6 +63,7 @@ class MainActivity : AppCompatActivity() {
 
         navRun.setOnClickListener {
             System.out.println("navRun")
+            showBottomNav()
             openFragment(WorkoutFragment())
         }
 
@@ -72,14 +74,13 @@ class MainActivity : AppCompatActivity() {
 
         navSet.setOnClickListener {
             Log.d("MainActivity", "navSet clicked")
+            showBottomNav()
             openFragment(SettingsFragment())
         }
     }
 
     // Метод для замены фрагмента
     private fun openFragment(fragment: Fragment) {
-        showBottomNav()
-
         supportFragmentManager.beginTransaction()
             .replace(R.id.mainFragmentContainer, fragment)
             .addToBackStack(null) // Добавить фрагмент в back stack
