@@ -1,14 +1,17 @@
 package com.pushup.donstop.ui
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.pushup.donstop.R
@@ -16,15 +19,17 @@ import com.pushup.donstop.databinding.FragmentWorkoutBinding
 
 class WorkoutFragment : Fragment() {
 
-    private var sequence = mutableListOf(4, 3, 3, 2, 2)
     private var currentRound = 0
     private val roundViews = mutableListOf<TextView>()
     private var isTimerRunning = false
     private var countDownTimer: CountDownTimer? = null
-    private var timeLeftInMillis: Long = 60000 // 1 минута
 
     private var _binding: FragmentWorkoutBinding? = null
     private val binding get() = _binding!!
+
+    private var sequence = mutableListOf<Int>() // будет установлено позже
+    private var timeLeftInMillis: Long = 0L     // тоже будет задано позже
+    private lateinit var level: String
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -36,6 +41,16 @@ class WorkoutFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        val prefs = requireActivity().getSharedPreferences("UserData", Context.MODE_PRIVATE)
+        level = prefs.getString("level", "Beginner") ?: "Beginner"
+
+        // Загружаем последовательность
+        sequence = WorkoutPlanConstants.setsMap[level]?.toMutableList() ?: mutableListOf(4, 3, 3, 2, 2)
+
+        // Загружаем время отдыха
+        val timeStr = WorkoutPlanConstants.restTimeMap[level] ?: "01:00"
+        timeLeftInMillis = convertTimeStringToMillis(timeStr)
 
         renderSequence()
         updateCounter()
@@ -65,14 +80,19 @@ class WorkoutFragment : Fragment() {
         }
 
         val calendarSection: View = view.findViewById(R.id.calendarIcon)
-
         calendarSection.setOnClickListener {
             parentFragmentManager.beginTransaction()
                 .replace(R.id.mainFragmentContainer, CalendarFragment())
                 .addToBackStack(null)
                 .commit()
         }
+    }
 
+    private fun convertTimeStringToMillis(timeStr: String): Long {
+        val parts = timeStr.split(":")
+        val minutes = parts.getOrNull(0)?.toIntOrNull() ?: 1
+        val seconds = parts.getOrNull(1)?.toIntOrNull() ?: 0
+        return (minutes * 60 + seconds) * 1000L
     }
 
     private fun toggleButtonVisibility() {
@@ -95,6 +115,18 @@ class WorkoutFragment : Fragment() {
             binding.plusButton.visibility = View.VISIBLE
             binding.minusButton.visibility = View.VISIBLE
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun saveWorkoutResult(level: String, totalReps: Int) {
+        val prefs = requireActivity().getSharedPreferences("WorkoutStats", Context.MODE_PRIVATE)
+        val editor = prefs.edit()
+
+        val today = java.time.LocalDate.now().toString() // формат: yyyy-MM-dd
+        val record = "$level:$totalReps"
+
+        editor.putString(today, record) // сохраняем как: "2025-05-14" -> "Beginner:24"
+        editor.apply()
     }
 
     private fun startTimer() {
@@ -123,6 +155,7 @@ class WorkoutFragment : Fragment() {
                     binding.readyButton.visibility = View.GONE
                     binding.stopButton.visibility = View.GONE
                 }
+                saveWorkoutResult(level, sequence.sum())
             }
         }.start()
 

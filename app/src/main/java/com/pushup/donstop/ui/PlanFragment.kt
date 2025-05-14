@@ -10,10 +10,11 @@ import android.widget.RadioGroup
 import android.widget.TableLayout
 import android.widget.TableRow
 import android.widget.TextView
-import androidx.compose.ui.graphics.Color
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.fragment.app.Fragment
 import com.pushup.donstop.R
+import java.text.SimpleDateFormat
+import java.util.*
+import com.pushup.donstop.ui.WorkoutPlanConstants
 
 class PlanFragment : Fragment() {
 
@@ -60,23 +61,87 @@ class PlanFragment : Fragment() {
         return view
     }
 
+    @SuppressLint("SetTextI18n")
     private fun showPlan(level: String) {
         tableLayout.removeAllViews()
 
-        val rows = when (level) {
-            "Beginner" -> listOf("10 push-ups", "Rest 60s", "3 sets")
-            "Medium" -> listOf("20 push-ups", "Rest 45s", "4 sets")
-            "Advanced" -> listOf("30 push-ups", "Rest 30s", "5 sets")
-            else -> listOf()
-        }
+        val dateFormat = SimpleDateFormat("dd.MM", Locale.getDefault())
+        val calendar = Calendar.getInstance()
 
-        for (item in rows) {
-            val row = TableRow(requireContext())
-            val text = TextView(requireContext())
-            text.text = item
-            text.setPadding(16, 16, 16, 16)
-            row.addView(text)
+        // Добавляем шапку
+        val header = layoutInflater.inflate(R.layout.table_header, tableLayout, false)
+        tableLayout.addView(header)
+
+        // Разделитель после шапки
+        val headerDivider = View(requireContext()).apply {
+            layoutParams = TableRow.LayoutParams(
+                TableRow.LayoutParams.MATCH_PARENT,
+                4
+            )
+            setBackgroundColor(0x22000000)
+        }
+        tableLayout.addView(headerDivider)
+
+        for (i in 0 until 10) {
+            val date = dateFormat.format(calendar.time)
+            val isRestDay = i % 3 == 2
+
+            val row = layoutInflater.inflate(R.layout.table_row, tableLayout, false) as TableRow
+
+            val levelText = row.getChildAt(0) as TextView
+            val dateText = row.getChildAt(1) as TextView
+            val setsText = row.getChildAt(2) as TextView
+            val restText = row.getChildAt(3) as TextView
+            val statusText = row.getChildAt(4) as TextView
+
+            if (isRestDay) {
+                levelText.text = "Rest day"
+                dateText.text = "------"
+                setsText.text = "------"
+                restText.text = "------"
+                statusText.text = "------"
+
+                levelText.setTextAppearance(R.style.PlanCellRest)
+                levelText.setBackgroundResource(R.drawable.cell_rest_bg)
+                row.setBackgroundResource(R.drawable.row_bg)
+            } else {
+                levelText.text = level
+                dateText.text = date
+
+                when (level) {
+                    "Beginner" -> {
+                        setsText.text = WorkoutPlanConstants.setsMap[level]?.joinToString(",") ?: ""
+                        restText.text = WorkoutPlanConstants.restTimeMap[level] ?: ""
+                    }
+                    "Medium" -> {
+                        setsText.text = WorkoutPlanConstants.setsMap[level]?.joinToString(",") ?: ""
+                        restText.text = WorkoutPlanConstants.restTimeMap[level] ?: ""
+                    }
+                    "Advanced" -> {
+                        setsText.text = WorkoutPlanConstants.setsMap[level]?.joinToString(",") ?: ""
+                        restText.text = WorkoutPlanConstants.restTimeMap[level] ?: ""
+                    }
+                }
+
+                statusText.text = "Planned"
+                statusText.setTextAppearance(R.style.StatusWork)
+                levelText.setBackgroundResource(R.drawable.cell_level_bg)
+                row.setBackgroundResource(R.drawable.row_bg)
+            }
+
             tableLayout.addView(row)
+
+            // Разделитель между строками
+            val divider = View(requireContext()).apply {
+                layoutParams = TableRow.LayoutParams(
+                    TableRow.LayoutParams.MATCH_PARENT,
+                    4
+                )
+                setBackgroundColor(0x22000000)
+            }
+            tableLayout.addView(divider)
+
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
     }
 }

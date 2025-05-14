@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
+import com.pushup.donstop.MainActivity
 import com.pushup.donstop.R
 
 class ParamFragment : Fragment() {
@@ -31,22 +32,27 @@ class ParamFragment : Fragment() {
         ageInput.setText(prefs.getInt("age", 0).toString())
         weightInput.setText(prefs.getFloat("weight", 0f).toString())
 
-        calculateButton.setOnClickListener {
-            val age = ageInput.text.toString().toIntOrNull()
-            val weight = weightInput.text.toString().toFloatOrNull()
-            val levelId = levelGroup.checkedRadioButtonId
-            val level = view.findViewById<RadioButton>(levelId).text.toString()
+        // Восстановление уровня
+        val savedLevel = prefs.getString("level", "Beginner") ?: "Beginner"
+        when (savedLevel) {
+            "Beginner" -> levelGroup.check(R.id.beginner)
+            "Medium" -> levelGroup.check(R.id.medium)
+            "Advanced" -> levelGroup.check(R.id.advanced)
+        }
 
-            if (age != null && weight != null) {
-                prefs.edit().apply {
-                    putInt("age", age)
-                    putFloat("weight", weight)
-                    putString("level", level)
-                    apply()
-                }
-                Toast.makeText(requireContext(), "Data saved for $level", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(requireContext(), "Invalid age or weight", Toast.LENGTH_SHORT).show()
+        // Слушатель изменения уровня
+        levelGroup.setOnCheckedChangeListener { _, checkedId ->
+            val level = when (checkedId) {
+                R.id.beginner -> "Beginner"
+                R.id.medium -> "Medium"
+                R.id.advanced -> "Advanced"
+                else -> "Beginner" // По умолчанию
+            }
+
+            // Сохранение выбранного уровня
+            prefs.edit().apply {
+                putString("level", level)
+                apply()
             }
         }
 
@@ -64,19 +70,17 @@ class ParamFragment : Fragment() {
                     apply()
                 }
 
-                val bundle = Bundle().apply {
+                val planFragment = PlanFragment()
+                planFragment.arguments = Bundle().apply {
                     putString("level", level)
                 }
-
-                System.out.println("CLICK!!!")
-
-                val planFragment = PlanFragment()
-                planFragment.arguments = bundle
 
                 requireActivity().supportFragmentManager.beginTransaction()
                     .replace(R.id.mainFragmentContainer, planFragment)
                     .addToBackStack(null)
                     .commit()
+
+                (requireActivity() as? MainActivity)?.showBottomNav()
             } else {
                 Toast.makeText(requireContext(), "Invalid age or weight", Toast.LENGTH_SHORT).show()
             }

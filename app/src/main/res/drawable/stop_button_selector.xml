@@ -1,27 +1,27 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Эффект при нажатии -->
     <item android:state_pressed="true">
         <layer-list>
-            <!-- Сама кнопка -->
             <item
-                android:drawable="@drawable/ready_button"
+                android:drawable="@drawable/stop_button"
                 android:width="200dp"
                 android:height="200dp"
                 android:gravity="center" />
             <item>
                 <shape android:shape="rectangle">
-                    <solid android:color="#66000000" /> <!-- 40% чёрный -->
-                    <corners android:radius="100dp" /> <!-- Радиус для круглых углов -->
+                    <solid android:color="#66000000" />
+                    <corners android:radius="100dp" />
                 </shape>
             </item>
         </layer-list>
     </item>
 
+    <!-- Состояние по умолчанию -->
     <item>
         <layer-list>
-            <!-- Обычная кнопка без затемнения -->
             <item
-                android:drawable="@drawable/ready_button"
+                android:drawable="@drawable/stop_button"
                 android:width="200dp"
                 android:height="200dp"
                 android:gravity="center" />

@@ -35,4 +35,42 @@
         <item name="android:textColor">#FFFFFF</item> <!-- Белый текст -->
         <item name="android:textSize">18sp</item>
     </style>
+
+    <style name="PlanTableHeader">
+        <item name="android:layout_margin">4dp</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center</item>
+        <item name="android:padding">8dp</item>
+    </style>
+
+    <style name="PlanCell">
+        <item name="android:textColor">@android:color/black</item>
+        <item name="android:gravity">center</item>
+        <item name="android:padding">6dp</item>
+    </style>
+
+    <style name="PlanCellGreen" parent="PlanCell">
+        <item name="android:textColor">#00695C</item> <!-- темно-зелёный -->
+    </style>
+
+    <style name="PlanCellLevel" parent="PlanCell">
+        <item name="android:background">@drawable/cell_level_bg</item>
+        <item name="android:textColor">@android:color/black</item>
+    </style>
+
+    <style name="PlanCellRest" parent="PlanCell">
+        <item name="android:background">@drawable/cell_rest_bg</item>
+        <item name="android:textColor">@android:color/black</item>
+    </style>
+
+    <style name="StatusDone" parent="PlanCell">
+        <item name="android:background">@drawable/status_done_bg</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="StatusWork" parent="PlanCell">
+        <item name="android:background">@drawable/status_work_bg</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
 </resources>

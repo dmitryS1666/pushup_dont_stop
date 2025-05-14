@@ -17,6 +17,7 @@ import com.pushup.donstop.ui.CalendarFragment
 import com.pushup.donstop.ui.LoadingFragment
 import com.pushup.donstop.ui.MainFragment
 import com.pushup.donstop.ui.ParamFragment
+import com.pushup.donstop.ui.PlanFragment
 import com.pushup.donstop.ui.SettingsFragment
 import com.pushup.donstop.ui.WorkoutFragment
 import com.pushup.donstop.ui.theme.PushUpDontStopTheme
@@ -56,10 +57,11 @@ class MainActivity : AppCompatActivity() {
             openFragment(ParamFragment())
         }
 
-//        navPlan.setOnClickListener {
-//            System.out.println("navPlan")
-//            openFragment(PlanFragment()) // Пример, откройте фрагмент для navPlan
-//        }
+        navPlan.setOnClickListener {
+            System.out.println("navPlan")
+            showBottomNav()
+            openFragment(PlanFragment())
+        }
 
         navRun.setOnClickListener {
             System.out.println("navRun")
@@ -101,7 +103,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     // Метод для отображения панели навигации
-    private fun showBottomNav() {
+    fun showBottomNav() {
         bottomNav = findViewById(R.id.bottomNavInclude)
         bottomNav.visibility = View.VISIBLE
     }
@@ -143,10 +145,10 @@ class MainActivity : AppCompatActivity() {
 
         val currentFragment = supportFragmentManager.findFragmentById(R.id.mainFragmentContainer)
 
-        if (currentFragment is MainFragment) {
-            hideBottomNav() // Скрываем навигацию на главном экране
+        if (currentFragment is MainFragment || currentFragment is ParamFragment) {
+            hideBottomNav()
         } else {
-            showBottomNav() // Показываем навигацию, если на других экранах
+            showBottomNav()
         }
     }
 }
