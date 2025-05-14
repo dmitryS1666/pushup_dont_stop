@@ -1,6 +1,8 @@
 package com.pushup.donstop.ui
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -24,7 +26,6 @@ class SettingsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         switchSound = view.findViewById(R.id.switchSound)
-        val infoSection: View = view.findViewById(R.id.btnInfo)
         val privacySection: View = view.findViewById(R.id.btnPrivacy)
 
         val prefs = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
@@ -35,18 +36,11 @@ class SettingsFragment : Fragment() {
             prefs.edit().putBoolean("sound_enabled", isChecked).apply()
         }
 
-        infoSection.setOnClickListener {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.mainFragmentContainer, InfoFragment())
-                .addToBackStack(null)
-                .commit()
-        }
-
+        // Открытие ссылки в браузере
         privacySection.setOnClickListener {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.mainFragmentContainer, PrivacyFragment())
-                .addToBackStack(null)
-                .commit()
+            val url = "https://google.com"
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            startActivity(intent)  // Открывает ссылку в браузере
         }
     }
 }
