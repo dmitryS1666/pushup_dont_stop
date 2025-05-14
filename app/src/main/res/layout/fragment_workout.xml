@@ -44,7 +44,7 @@
     <FrameLayout
         android:id="@+id/fragment_workout"
         android:layout_width="match_parent"
-        android:layout_height="260dp"
+        android:layout_height="280dp"
         app:layout_constraintBottom_toTopOf="@id/sequence"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.495"
@@ -54,7 +54,7 @@
         <!-- Фоновое изображение: растягивается на весь фрейм -->
         <ImageView
             android:id="@+id/pushupBackground"
-            android:layout_width="180pt"
+            android:layout_width="match_parent"
             android:layout_height="280dp"
             android:layout_gravity="center"
             android:scaleType="fitXY"
@@ -63,7 +63,7 @@
         <ImageView
             android:id="@+id/pushupImage"
             android:layout_width="200dp"
-            android:layout_height="280dp"
+            android:layout_height="320dp"
             android:layout_gravity="center"
             android:scaleType="centerInside"
             android:src="@drawable/push_up" />

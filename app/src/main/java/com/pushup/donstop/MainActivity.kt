@@ -19,6 +19,7 @@ import com.pushup.donstop.ui.MainFragment
 import com.pushup.donstop.ui.ParamFragment
 import com.pushup.donstop.ui.PlanFragment
 import com.pushup.donstop.ui.SettingsFragment
+import com.pushup.donstop.ui.StatsFragment
 import com.pushup.donstop.ui.WorkoutFragment
 import com.pushup.donstop.ui.theme.PushUpDontStopTheme
 import java.util.Locale
@@ -84,10 +85,11 @@ class MainActivity : AppCompatActivity() {
             updateNavIcons("run")
         }
 
-//        navStat.setOnClickListener {
-//            openFragment(StatFragment()) // Пример, откройте фрагмент для navStat
-//            updateNavIcons("stat")
-//        }
+        navStat.setOnClickListener {
+            showBottomNav()
+            openFragment(StatsFragment())
+            updateNavIcons("stat")
+        }
 
         navSet.setOnClickListener {
             showBottomNav()
