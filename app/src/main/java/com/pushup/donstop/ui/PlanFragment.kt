@@ -14,7 +14,6 @@ import androidx.fragment.app.Fragment
 import com.pushup.donstop.R
 import java.text.SimpleDateFormat
 import java.util.*
-import com.pushup.donstop.ui.WorkoutPlanConstants
 
 class PlanFragment : Fragment() {
 
@@ -37,8 +36,8 @@ class PlanFragment : Fragment() {
         advancedButton = view.findViewById(R.id.advanced)
         tableLayout = view.findViewById(R.id.planTable)
 
-        // Получаем переданный уровень
-        val selectedLevel = arguments?.getString("level") ?: "Beginner"
+        val sharedPreferences = requireContext().getSharedPreferences("UserData", 0)
+        val selectedLevel = sharedPreferences.getString("level", "Beginner") ?: "Beginner"
 
         when (selectedLevel) {
             "Beginner" -> beginnerButton.isChecked = true
