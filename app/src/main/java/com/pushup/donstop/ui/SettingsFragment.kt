@@ -38,7 +38,7 @@ class SettingsFragment : Fragment() {
 
         // Открытие ссылки в браузере
         privacySection.setOnClickListener {
-            val url = "https://google.com"
+            val url = "https://pushupdontstop365.com/policy"
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
             startActivity(intent)  // Открывает ссылку в браузере
         }

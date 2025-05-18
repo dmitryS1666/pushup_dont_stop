@@ -15,15 +15,15 @@
         tools:ignore="MissingConstraints">
 
         <!-- Иконка слева -->
-        <ImageView
-            android:id="@+id/calendarIcon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginTop="15dp"
-            android:layout_marginRight="15dp"
-            android:src="@drawable/calendar"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+<!--        <ImageView-->
+<!--            android:id="@+id/calendarIcon"-->
+<!--            android:layout_width="24dp"-->
+<!--            android:layout_height="24dp"-->
+<!--            android:layout_marginTop="15dp"-->
+<!--            android:layout_marginRight="15dp"-->
+<!--            android:src="@drawable/calendar"-->
+<!--            app:layout_constraintEnd_toEndOf="parent"-->
+<!--            app:layout_constraintTop_toTopOf="parent" />-->
 
         <!-- Кнопка по центру -->
         <TextView

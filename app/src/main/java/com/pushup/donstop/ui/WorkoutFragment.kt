@@ -79,13 +79,13 @@ class WorkoutFragment : Fragment() {
             toggleButtonVisibility()
         }
 
-        val calendarSection: View = view.findViewById(R.id.calendarIcon)
-        calendarSection.setOnClickListener {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.mainFragmentContainer, CalendarFragment())
-                .addToBackStack(null)
-                .commit()
-        }
+//        val calendarSection: View = view.findViewById(R.id.calendarIcon)
+//        calendarSection.setOnClickListener {
+//            parentFragmentManager.beginTransaction()
+//                .replace(R.id.mainFragmentContainer, CalendarFragment())
+//                .addToBackStack(null)
+//                .commit()
+//        }
     }
 
     private fun convertTimeStringToMillis(timeStr: String): Long {
