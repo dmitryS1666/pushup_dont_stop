@@ -1,5 +1,6 @@
 package com.pushup.donstop
 
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.drawable.Drawable
@@ -37,12 +38,16 @@ class SplashActivity : AppCompatActivity() {
         bannerView = findViewById(R.id.bannerImageView)
         progressBar = findViewById(R.id.progressBar)
 
-        val cachedJson = prefs.getString("banner_json", null)
+        if (isOnline()) {
+            val cachedJson = prefs.getString("banner_json", null)
 
-        if (cachedJson != null) {
-            showBanner(JSONObject(cachedJson))
+            if (cachedJson != null) {
+                showBanner(JSONObject(cachedJson))
+            } else {
+                fetchBanner()
+            }
         } else {
-            fetchBanner()
+            goToMain()
         }
     }
 
@@ -118,5 +123,11 @@ class SplashActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
+    }
+
+    fun isOnline(): Boolean {
+        val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val network = cm.activeNetworkInfo
+        return network != null && network.isConnected
     }
 }

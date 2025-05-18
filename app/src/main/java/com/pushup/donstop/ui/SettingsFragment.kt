@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Switch
 import androidx.fragment.app.Fragment
+import com.pushup.donstop.MusicPlayerManager
 import com.pushup.donstop.R
 
 class SettingsFragment : Fragment() {
@@ -34,6 +35,12 @@ class SettingsFragment : Fragment() {
 
         switchSound.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean("sound_enabled", isChecked).apply()
+
+            if (isChecked) {
+                MusicPlayerManager.start(requireContext())
+            } else {
+                MusicPlayerManager.stop()
+            }
         }
 
         // Открытие ссылки в браузере
