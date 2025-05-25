@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import com.pushup.donstop.ui.EditPlanDialogFragment
 import com.pushup.donstop.ui.LoadingFragment
 import com.pushup.donstop.ui.MainFragment
 import com.pushup.donstop.ui.ParamFragment
@@ -98,7 +101,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateNavIcons(activeFragment: String) {
+    fun updateNavIcons(activeFragment: String) {
         // Сбросить все иконки
         resetNavIcons()
 
@@ -127,10 +130,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     // Метод для замены фрагмента
-    private fun openFragment(fragment: Fragment) {
+    fun openFragment(fragment: Fragment) {
+        supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
         supportFragmentManager.beginTransaction()
             .replace(R.id.mainFragmentContainer, fragment)
-            .addToBackStack(null) // Добавить фрагмент в back stack
             .commit()
     }
 
@@ -195,6 +198,27 @@ class MainActivity : AppCompatActivity() {
         } else {
             showBottomNav()
         }
+    }
+
+    private fun showEditPlanDialog() {
+        val dialog = EditPlanDialogFragment()
+        dialog.listener = object : EditPlanDialogFragment.OnPlanEditedListener {
+            override fun onPlanEdited(level: String, date: String, sets: List<Int>, restTime: String) {
+                // TODO: Добавь сюда логику по обновлению UI, таблицы и т.п.
+                Toast.makeText(this@MainActivity, "Plan updated: $level, $date, $sets, $restTime", Toast.LENGTH_SHORT).show()
+            }
+        }
+        dialog.show(supportFragmentManager, "EditPlanDialog")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        MusicPlayerManager.stop()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        MusicPlayerManager.start(this)
     }
 }
 

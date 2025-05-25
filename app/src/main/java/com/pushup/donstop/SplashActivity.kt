@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.ProgressBar
@@ -26,6 +27,9 @@ class SplashActivity : AppCompatActivity() {
     private val prefs: SharedPreferences by lazy {
         getSharedPreferences("banner_prefs", MODE_PRIVATE)
     }
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val goToMainRunnable = Runnable { goToMain() }
 
     private val client = OkHttpClient.Builder()
         .callTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
@@ -63,6 +67,9 @@ class SplashActivity : AppCompatActivity() {
 
             override fun onResponse(call: Call, response: Response) {
                 val json = response.body?.string()
+
+                Log.d("BannerResponse", "Raw response: $json")
+
                 if (json != null) {
                     val obj = JSONObject(json)
                     prefs.edit().putString("banner_json", json).apply()
@@ -78,11 +85,13 @@ class SplashActivity : AppCompatActivity() {
         val action = json.optString("goto", null)
         val source = json.optString("isReady", null)
 
+        Log.d("BannerURL", "Goto URL: $action")
+
         if (source != null) {
             Glide.with(this)
                 .load(source)
                 .centerCrop()
-                .timeout(15000)
+                .timeout(15000000)
                 .into(object : CustomTarget<Drawable>() {
                     override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
                         bannerView.setImageDrawable(resource)
@@ -90,6 +99,8 @@ class SplashActivity : AppCompatActivity() {
                         progressBar.visibility = View.GONE
 
                         bannerView.setOnClickListener {
+                            handler.removeCallbacks(goToMainRunnable)
+
                             if (action != null && action.startsWith("https://")) {
                                 val intent = Intent(this@SplashActivity, BannerWebActivity::class.java)
                                 intent.putExtra("url", action)
@@ -101,17 +112,14 @@ class SplashActivity : AppCompatActivity() {
                         }
                     }
 
-                    override fun onLoadCleared(placeholder: Drawable?) {
-                        // not used
-                    }
-
+                    override fun onLoadCleared(placeholder: Drawable?) {}
                     override fun onLoadFailed(errorDrawable: Drawable?) {
                         goToMain()
                     }
                 })
 
-            // Таймер если юзер не нажал за 15 секунд
-            Handler(Looper.getMainLooper()).postDelayed({ goToMain() }, 15000)
+            // Запуск управляемого таймера
+            handler.postDelayed(goToMainRunnable, 15000000)
         } else {
             goToMain()
         }

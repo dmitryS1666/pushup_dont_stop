@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Switch
 import androidx.fragment.app.Fragment
+import com.pushup.donstop.BannerWebActivity
 import com.pushup.donstop.MusicPlayerManager
 import com.pushup.donstop.R
 
@@ -46,8 +47,9 @@ class SettingsFragment : Fragment() {
         // Открытие ссылки в браузере
         privacySection.setOnClickListener {
             val url = "https://pushupdontstop365.com/policy"
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-            startActivity(intent)  // Открывает ссылку в браузере
+            val intent = Intent(context, BannerWebActivity::class.java)
+            intent.putExtra("url", url)
+            startActivity(intent)
         }
     }
 }

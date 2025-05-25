@@ -14,6 +14,7 @@ materialCalendarview = "2.0.0"
 navigationFragmentKtx = "2.8.9"
 appcompat = "1.7.0"
 cardview = "1.0.0"
+media3CommonKtx = "1.7.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -36,6 +37,7 @@ androidx-navigation-fragment-ktx = { group = "androidx.navigation", name = "navi
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
 material-calendarview = { group = "com.applandeo", name = "material-calendarview", version.ref = "materialCalendarview" }
+androidx-media3-common-ktx = { group = "androidx.media3", name = "media3-common-ktx", version.ref = "media3CommonKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

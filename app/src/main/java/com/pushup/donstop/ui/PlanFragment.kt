@@ -1,6 +1,7 @@
 package com.pushup.donstop.ui
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +11,7 @@ import android.widget.RadioGroup
 import android.widget.TableLayout
 import android.widget.TableRow
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.pushup.donstop.R
 import java.text.SimpleDateFormat
@@ -23,12 +25,22 @@ class PlanFragment : Fragment() {
     private lateinit var advancedButton: RadioButton
     private lateinit var tableLayout: TableLayout
 
+    private var currentLevel: String = "Beginner"
+
     @SuppressLint("MissingInflatedId")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_plan, container, false)
+
+        val _sharedPreferences = requireContext().getSharedPreferences("UserData", Context.MODE_PRIVATE)
+        val isFirstTimeOnPlan = _sharedPreferences.getBoolean("isFirstTimeOnPlanFragment", true)
+
+        if (isFirstTimeOnPlan) {
+            Toast.makeText(requireContext(), "You can edit the plan by clicking on any row", Toast.LENGTH_LONG).show()
+            _sharedPreferences.edit().putBoolean("isFirstTimeOnPlanFragment", false).apply()
+        }
 
         levelGroup = view.findViewById(R.id.levelGroup)
         beginnerButton = view.findViewById(R.id.beginner)
@@ -37,24 +49,24 @@ class PlanFragment : Fragment() {
         tableLayout = view.findViewById(R.id.planTable)
 
         val sharedPreferences = requireContext().getSharedPreferences("UserData", 0)
-        val selectedLevel = sharedPreferences.getString("level", "Beginner") ?: "Beginner"
+        currentLevel = sharedPreferences.getString("level", "Beginner") ?: "Beginner"
 
-        when (selectedLevel) {
+        when (currentLevel) {
             "Beginner" -> beginnerButton.isChecked = true
             "Medium" -> mediumButton.isChecked = true
             "Advanced" -> advancedButton.isChecked = true
         }
 
-        showPlan(selectedLevel)
+        showPlan(currentLevel)
 
         levelGroup.setOnCheckedChangeListener { _, checkedId ->
-            val level = when (checkedId) {
+            currentLevel = when (checkedId) {
                 R.id.beginner -> "Beginner"
                 R.id.medium -> "Medium"
                 R.id.advanced -> "Advanced"
                 else -> "Beginner"
             }
-            showPlan(level)
+            showPlan(currentLevel)
         }
 
         return view
@@ -106,31 +118,27 @@ class PlanFragment : Fragment() {
             } else {
                 levelText.text = level
                 dateText.text = date
-
-                when (level) {
-                    "Beginner" -> {
-                        setsText.text = WorkoutPlanConstants.setsMap[level]?.joinToString(",") ?: ""
-                        restText.text = WorkoutPlanConstants.restTimeMap[level] ?: ""
-                    }
-                    "Medium" -> {
-                        setsText.text = WorkoutPlanConstants.setsMap[level]?.joinToString(",") ?: ""
-                        restText.text = WorkoutPlanConstants.restTimeMap[level] ?: ""
-                    }
-                    "Advanced" -> {
-                        setsText.text = WorkoutPlanConstants.setsMap[level]?.joinToString(",") ?: ""
-                        restText.text = WorkoutPlanConstants.restTimeMap[level] ?: ""
-                    }
-                }
-
+                setsText.text = WorkoutPlanConstants.setsMap[level]?.joinToString(",") ?: ""
+                restText.text = WorkoutPlanConstants.restTimeMap[level] ?: ""
                 statusText.text = "Planned"
-                statusText.setTextAppearance(R.style.StatusWork)
+
                 levelText.setBackgroundResource(R.drawable.cell_level_bg)
                 row.setBackgroundResource(R.drawable.row_bg)
+                statusText.setTextAppearance(R.style.StatusWork)
+
+                // 🔥 Обработка нажатия — открыть форму редактирования
+                row.setOnClickListener {
+                    showEditPlanDialog(
+                        level = level,
+                        date = date,
+                        sets = setsText.text.toString(),
+                        restTime = restText.text.toString()
+                    )
+                }
             }
 
             tableLayout.addView(row)
 
-            // Разделитель между строками
             val divider = View(requireContext()).apply {
                 layoutParams = TableRow.LayoutParams(
                     TableRow.LayoutParams.MATCH_PARENT,
@@ -142,5 +150,25 @@ class PlanFragment : Fragment() {
 
             calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
+    }
+
+    private fun showEditPlanDialog(level: String, date: String, sets: String, restTime: String) {
+        val dialog = EditPlanDialogFragment().apply {
+            arguments = Bundle().apply {
+                putString("level", level)
+                putString("date", date)
+                putString("sets", sets)
+                putString("restTime", restTime)
+            }
+            listener = object : EditPlanDialogFragment.OnPlanEditedListener {
+                override fun onPlanEdited(level: String, date: String, sets: List<Int>, restTime: String) {
+                    WorkoutPlanConstants.setsMap[level] = sets
+                    WorkoutPlanConstants.restTimeMap[level] = restTime
+                    showPlan(level)
+                }
+            }
+        }
+
+        dialog.show(parentFragmentManager, "EditPlanDialog")
     }
 }

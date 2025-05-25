@@ -73,4 +73,15 @@
         <item name="android:background">@drawable/status_work_bg</item>
         <item name="android:textColor">@android:color/white</item>
     </style>
+
+    <style name="SetInput">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/input_background</item>
+        <item name="android:inputType">number</item>
+        <item name="android:maxLength">2</item>
+        <item name="android:padding">8dp</item>
+        <item name="android:gravity">center</item>
+    </style>
 </resources>

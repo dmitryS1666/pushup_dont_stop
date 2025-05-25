@@ -29,8 +29,16 @@ class ParamFragment : Fragment() {
         calculateButton = view.findViewById(R.id.calculateButton)
 
         val prefs = requireActivity().getSharedPreferences("UserData", Context.MODE_PRIVATE)
-        ageInput.setText(prefs.getInt("age", 0).toString())
-        weightInput.setText(prefs.getFloat("weight", 0f).toString())
+        val savedAge = prefs.getInt("age", -1)
+        val savedWeight = prefs.getFloat("weight", -1f)
+
+        if (savedAge > 0) {
+            ageInput.setText(savedAge.toString())
+        }
+
+        if (savedWeight > 0f) {
+            weightInput.setText(savedWeight.toString())
+        }
 
         // Восстановление уровня
         val savedLevel = prefs.getString("level", "Beginner") ?: "Beginner"
@@ -62,7 +70,11 @@ class ParamFragment : Fragment() {
             val levelId = levelGroup.checkedRadioButtonId
             val level = view.findViewById<RadioButton>(levelId).text.toString()
 
-            if (age != null && weight != null) {
+            if (age == null || weight == null) {
+                Toast.makeText(requireContext(), "Please enter valid numbers", Toast.LENGTH_SHORT).show()
+            } else if (age !in 10..100 || weight !in 30f..200f) {
+                Toast.makeText(requireContext(), "Age must be 10–100, weight must be 30–200 kg", Toast.LENGTH_SHORT).show()
+            } else {
                 prefs.edit().apply {
                     putInt("age", age)
                     putFloat("weight", weight)
@@ -81,8 +93,7 @@ class ParamFragment : Fragment() {
                     .commit()
 
                 (requireActivity() as? MainActivity)?.showBottomNav()
-            } else {
-                Toast.makeText(requireContext(), "Invalid age or weight", Toast.LENGTH_SHORT).show()
+                (requireActivity() as? MainActivity)?.updateNavIcons("plan")
             }
         }
 

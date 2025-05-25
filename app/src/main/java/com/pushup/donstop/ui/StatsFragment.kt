@@ -16,9 +16,7 @@ import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.pushup.donstop.R
 import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 class StatsFragment : Fragment() {
 
@@ -43,17 +41,32 @@ class StatsFragment : Fragment() {
 
     @SuppressLint("SetTextI18n")
     private fun showChart() {
-        val trainingDates = getTrainingDates() // Заглушка — получи реальные даты
-        if (trainingDates.isEmpty()) return
-
-        // Находим минимальную дату и вычитаем 2 дня
-        val startDate = Calendar.getInstance().apply {
-            time = trainingDates.minOrNull() ?: Date()
-            add(Calendar.DAY_OF_YEAR, -2)
-        }
+        val trainingDates = getTrainingDates().sorted()
 
         val today = Calendar.getInstance()
-        val dateFormat = SimpleDateFormat("d MMM", Locale.getDefault())
+
+        val showOnlyToday = trainingDates.isEmpty() ||
+                trainingDates.maxOrNull()?.let {
+                    val lastDate = Calendar.getInstance().apply { time = it }
+                    val diffDays = ((today.timeInMillis - lastDate.timeInMillis) / (1000 * 60 * 60 * 24)).toInt()
+                    diffDays > 2
+                } ?: true
+
+        if (showOnlyToday) {
+            // Показываем только текущий день с нулевыми данными
+            val onlyToday = listOf(today.time)
+            buildChart(onlyToday)
+            percentText.text = "0%"
+            val todayFormatted = SimpleDateFormat("d MMMM", Locale.getDefault()).format(today.time)
+            dateRange.text = "Today - $todayFormatted"
+            return
+        }
+
+        // Начинаем с минимальной даты из данных минус 2 дня
+        val startDate = Calendar.getInstance().apply {
+            time = trainingDates.minOrNull() ?: today.time
+            add(Calendar.DAY_OF_YEAR, -2)
+        }
 
         val entries = ArrayList<BarEntry>()
         val labels = ArrayList<String>()
@@ -62,20 +75,16 @@ class StatsFragment : Fragment() {
         var totalDays = 0
 
         val calendar = startDate.clone() as Calendar
-
-        // Проверяем, если нет данных за последние 2 дня, начинаем с сегодняшнего
-        if (trainingDates.isEmpty()) {
-            calendar.time = today.time
-        }
+        val dateFormat = SimpleDateFormat("d MMM", Locale.getDefault())
 
         while (!calendar.after(today)) {
             val date = calendar.time
             val dateLabel = dateFormat.format(date)
             labels.add(dateLabel)
 
-            val isDone = trainingDates.any { isSameDay(it, date) } // замените на реальный статус
+            val isDone = trainingDates.any { isSameDay(it, date) }
             val value = if (isDone) 1f else 0f
-            if (value == 1f) completedCount++
+            if (isDone) completedCount++
 
             entries.add(BarEntry(totalDays.toFloat(), value))
             calendar.add(Calendar.DAY_OF_YEAR, 1)
@@ -84,8 +93,8 @@ class StatsFragment : Fragment() {
 
         val dataSet = BarDataSet(entries, "Done")
         dataSet.color = Color.YELLOW
-        dataSet.valueTextColor = Color.TRANSPARENT // Убираем текстовые значения сверху столбцов
-        dataSet.valueTextSize = 0f // Убираем размер текста
+        dataSet.valueTextColor = Color.TRANSPARENT
+        dataSet.valueTextSize = 0f
 
         val data = BarData(dataSet)
         barChart.data = data
@@ -96,11 +105,10 @@ class StatsFragment : Fragment() {
         xAxis.position = XAxis.XAxisPosition.BOTTOM
         xAxis.textColor = Color.WHITE
 
-        // Настройки для оси Y
         val leftAxis = barChart.axisLeft
-        leftAxis.setDrawLabels(false) // Отключаем отображение меток оси Y
-        leftAxis.setDrawGridLines(true) // Оставляем линии сетки
-        leftAxis.enableGridDashedLine(10f, 10f, 0f) // Пунктирная линия для сетки
+        leftAxis.setDrawLabels(false)
+        leftAxis.setDrawGridLines(true)
+        leftAxis.enableGridDashedLine(10f, 10f, 0f)
 
         barChart.axisRight.isEnabled = false
         barChart.description.isEnabled = false
@@ -109,20 +117,67 @@ class StatsFragment : Fragment() {
         barChart.setTouchEnabled(false)
         barChart.invalidate()
 
-        val percent = (completedCount * 100) / totalDays
+        val percent = if (totalDays > 0) (completedCount * 100) / totalDays else 0
         percentText.text = "$percent%"
 
-        val todayFormatted = SimpleDateFormat("d MMMM", Locale.getDefault()).format(Date())
+        val todayFormatted = SimpleDateFormat("d MMMM", Locale.getDefault()).format(today.time)
         dateRange.text = "Today - $todayFormatted"
     }
 
+    private fun buildChart(dates: List<Date>) {
+        val entries = ArrayList<BarEntry>()
+        val labels = ArrayList<String>()
+        val dateFormat = SimpleDateFormat("d MMM", Locale.getDefault())
+
+        for ((index, date) in dates.withIndex()) {
+            labels.add(dateFormat.format(date))
+            entries.add(BarEntry(index.toFloat(), 0f))
+        }
+
+        val dataSet = BarDataSet(entries, "Done")
+        dataSet.color = Color.YELLOW
+        dataSet.valueTextColor = Color.TRANSPARENT
+        dataSet.valueTextSize = 0f
+
+        val data = BarData(dataSet)
+        barChart.data = data
+
+        val xAxis = barChart.xAxis
+        xAxis.valueFormatter = IndexAxisValueFormatter(labels)
+        xAxis.granularity = 1f
+        xAxis.position = XAxis.XAxisPosition.BOTTOM
+        xAxis.textColor = Color.WHITE
+
+        val leftAxis = barChart.axisLeft
+        leftAxis.setDrawLabels(false)
+        leftAxis.setDrawGridLines(true)
+        leftAxis.enableGridDashedLine(10f, 10f, 0f)
+
+        barChart.axisRight.isEnabled = false
+        barChart.description.isEnabled = false
+        barChart.legend.isEnabled = false
+        barChart.setScaleEnabled(false)
+        barChart.setTouchEnabled(false)
+        barChart.invalidate()
+    }
+
     private fun getTrainingDates(): List<Date> {
+        val prefs = requireContext().getSharedPreferences("WorkoutStats", android.content.Context.MODE_PRIVATE)
+        val allEntries = prefs.all
+
         val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        return listOf(
-            format.parse("2025-05-10"),
-            format.parse("2025-05-12"),
-            format.parse("2025-05-13")
-        ).filterNotNull()
+        val result = mutableListOf<Date>()
+
+        for ((key, _) in allEntries) {
+            try {
+                val date = format.parse(key)
+                if (date != null) result.add(date)
+            } catch (_: Exception) {
+                // Пропускаем некорректные ключи
+            }
+        }
+
+        return result
     }
 
     private fun isSameDay(date1: Date, date2: Date): Boolean {

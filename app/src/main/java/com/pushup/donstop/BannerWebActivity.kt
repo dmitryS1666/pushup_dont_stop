@@ -2,7 +2,9 @@ package com.pushup.donstop
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import android.webkit.CookieManager
+import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -15,6 +17,9 @@ class BannerWebActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        MusicPlayerManager.stop()
+
         setContentView(R.layout.activity_banner_web)
 
         val url = intent.getStringExtra("url") ?: run {
@@ -22,9 +27,10 @@ class BannerWebActivity : AppCompatActivity() {
             return
         }
 
+        Log.d("Banners", "Url: $url")
+
         webView = findViewById(R.id.bannerWebView)
 
-        // Настройки WebView
         with(webView.settings) {
             javaScriptEnabled = true
             domStorageEnabled = true
@@ -32,13 +38,17 @@ class BannerWebActivity : AppCompatActivity() {
             loadsImagesAutomatically = true
             useWideViewPort = true
             loadWithOverviewMode = true
+            builtInZoomControls = false
+            displayZoomControls = false
         }
 
-        // Включить куки
-        CookieManager.getInstance().setAcceptCookie(true)
+        CookieManager.getInstance().apply {
+            setAcceptCookie(true)
+            setAcceptThirdPartyCookies(webView, true)
+        }
 
-        // Открытие ссылок внутри WebView
         webView.webViewClient = WebViewClient()
+        webView.webChromeClient = WebChromeClient()
 
         webView.loadUrl(url)
     }
