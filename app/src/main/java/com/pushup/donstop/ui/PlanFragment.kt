@@ -118,9 +118,20 @@ class PlanFragment : Fragment() {
             } else {
                 levelText.text = level
                 dateText.text = date
-                setsText.text = WorkoutPlanConstants.setsMap[level]?.joinToString(",") ?: ""
-                restText.text = WorkoutPlanConstants.restTimeMap[level] ?: ""
-                statusText.text = "Planned"
+
+                val savedPlan = WorkoutPlanConstants.individualPlanMap[date]
+
+                if (savedPlan != null) {
+                    levelText.text = savedPlan.level
+                    setsText.text = savedPlan.sets.joinToString(",")
+                    restText.text = savedPlan.restTime
+                } else {
+                    levelText.text = level
+                    setsText.text = WorkoutPlanConstants.setsMap[level]?.joinToString(",") ?: ""
+                    restText.text = WorkoutPlanConstants.restTimeMap[level] ?: ""
+                }
+
+                statusText.text = "Planed"
 
                 levelText.setBackgroundResource(R.drawable.cell_level_bg)
                 row.setBackgroundResource(R.drawable.row_bg)
@@ -162,9 +173,9 @@ class PlanFragment : Fragment() {
             }
             listener = object : EditPlanDialogFragment.OnPlanEditedListener {
                 override fun onPlanEdited(level: String, date: String, sets: List<Int>, restTime: String) {
-                    WorkoutPlanConstants.setsMap[level] = sets
-                    WorkoutPlanConstants.restTimeMap[level] = restTime
-                    showPlan(level)
+                    WorkoutPlanConstants.individualPlanMap[date] = PlanData(level, sets, restTime)
+                    WorkoutPlanConstants.saveIndividualPlans(requireContext()) // сохранить изменения
+                    showPlan(currentLevel)
                 }
             }
         }

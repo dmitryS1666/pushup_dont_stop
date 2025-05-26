@@ -39,18 +39,28 @@ class WorkoutFragment : Fragment() {
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         val prefs = requireActivity().getSharedPreferences("UserData", Context.MODE_PRIVATE)
         level = prefs.getString("level", "Beginner") ?: "Beginner"
 
-        // Загружаем последовательность
-        sequence = WorkoutPlanConstants.setsMap[level]?.toMutableList() ?: mutableListOf(4, 3, 3, 2, 2)
+        // Получаем текущую дату в формате "dd.MM"
+        val currentDate = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM"))
 
-        // Загружаем время отдыха
-        val timeStr = WorkoutPlanConstants.restTimeMap[level] ?: "01:00"
-        timeLeftInMillis = convertTimeStringToMillis(timeStr)
+        // Пробуем загрузить индивидуальный план
+        val plan = WorkoutPlanConstants.individualPlanMap[currentDate]
+
+        if (plan != null) {
+            level = plan.level
+            sequence = plan.sets.toMutableList()
+            timeLeftInMillis = convertTimeStringToMillis(plan.restTime)
+        } else {
+            sequence = WorkoutPlanConstants.setsMap[level]?.toMutableList() ?: mutableListOf(4, 3, 3, 2, 2)
+            val timeStr = WorkoutPlanConstants.restTimeMap[level] ?: "01:00"
+            timeLeftInMillis = convertTimeStringToMillis(timeStr)
+        }
 
         renderSequence()
         updateCounter()

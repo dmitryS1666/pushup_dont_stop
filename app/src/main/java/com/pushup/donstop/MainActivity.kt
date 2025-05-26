@@ -23,6 +23,7 @@ import com.pushup.donstop.ui.PlanFragment
 import com.pushup.donstop.ui.SettingsFragment
 import com.pushup.donstop.ui.StatsFragment
 import com.pushup.donstop.ui.WorkoutFragment
+import com.pushup.donstop.ui.WorkoutPlanConstants
 import com.pushup.donstop.ui.theme.PushUpDontStopTheme
 import java.util.Locale
 
@@ -45,6 +46,9 @@ class MainActivity : AppCompatActivity() {
         MusicPlayerManager.start(this)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = Color.TRANSPARENT
+
+        WorkoutPlanConstants.loadIndividualPlans(this)
+        setContentView(R.layout.activity_main)
 
         // Принудительно установить английскую локаль
         val locale = Locale("en")
