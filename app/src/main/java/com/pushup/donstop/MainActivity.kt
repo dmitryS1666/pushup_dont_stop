@@ -224,6 +224,11 @@ class MainActivity : AppCompatActivity() {
         super.onStart()
         MusicPlayerManager.start(this)
     }
+
+    override fun onResume() {
+        super.onResume()
+        hideSystemUI() // Снова скрываем системные кнопки при возвращении
+    }
 }
 
 @Composable

@@ -3,6 +3,7 @@ package com.pushup.donstop
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
@@ -21,6 +22,15 @@ class BannerWebActivity : AppCompatActivity() {
         MusicPlayerManager.stop()
 
         setContentView(R.layout.activity_banner_web)
+
+        window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        or View.SYSTEM_UI_FLAG_FULLSCREEN
+                        or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                )
 
         val url = intent.getStringExtra("url") ?: run {
             finish()
@@ -47,7 +57,33 @@ class BannerWebActivity : AppCompatActivity() {
             setAcceptThirdPartyCookies(webView, true)
         }
 
-        webView.webViewClient = WebViewClient()
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean {
+                val clickedUrl = request?.url.toString()
+                Log.d("BannerWebActivity", "Клик по ссылке: $clickedUrl")
+
+                // Если нужно открыть в новом окне — делаем это
+                val intent = intent
+                intent.putExtra("url", clickedUrl)
+                finish() // Закрываем текущую
+                startActivity(intent) // Открываем новую
+
+                return true // Мы сами обработали переход
+            }
+
+            // (опционально) для старых версий API
+            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                url?.let {
+                    Log.d("BannerWebActivity", "Клик по ссылке (old API): $url")
+
+                    val intent = intent
+                    intent.putExtra("url", url)
+                    finish()
+                    startActivity(intent)
+                }
+                return true
+            }
+        }
         webView.webChromeClient = WebChromeClient()
 
         webView.loadUrl(url)

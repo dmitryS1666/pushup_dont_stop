@@ -44,7 +44,6 @@ class SettingsFragment : Fragment() {
             }
         }
 
-        // Открытие ссылки в браузере
         privacySection.setOnClickListener {
             val url = "https://pushupdontstop365.com/policy"
             val intent = Intent(context, BannerWebActivity::class.java)
