@@ -39,7 +39,7 @@ class LoadingFragment : Fragment() {
 
     private fun startLoadingAnimation() {
         progressAnimator = ValueAnimator.ofInt(0, 100).apply {
-            duration = 2000
+            duration = 5000
             addUpdateListener { animator ->
                 val progress = animator.animatedValue as Int
                 percentageText?.text = "$progress%"

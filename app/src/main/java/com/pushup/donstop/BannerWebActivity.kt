@@ -1,26 +1,31 @@
 package com.pushup.donstop
 
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.webkit.CookieManager
-import android.webkit.WebChromeClient
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.webkit.*
+import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.getSystemService
 
 class BannerWebActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
+    private var webViewBundle: Bundle? = null
+    private lateinit var noInternetLayout: View
+    private lateinit var webContainer: FrameLayout
 
-    @SuppressLint("SetJavaScriptEnabled")
+    @SuppressLint("SetJavaScriptEnabled", "MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         MusicPlayerManager.stop()
-
         setContentView(R.layout.activity_banner_web)
 
         window.decorView.systemUiVisibility = (
@@ -32,15 +37,26 @@ class BannerWebActivity : AppCompatActivity() {
                         or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                 )
 
+        webView = findViewById(R.id.bannerWebView)
+        noInternetLayout = findViewById(R.id.noInternetLayout)
+        webContainer = findViewById(R.id.webContainer)
+
+        setupWebView()
+
         val url = intent.getStringExtra("url") ?: run {
             finish()
             return
         }
 
-        Log.d("Banners", "Url: $url")
+        if (isOnline()) {
+            webView.loadUrl(url)
+            showWebView()
+        } else {
+            showNoInternet()
+        }
+    }
 
-        webView = findViewById(R.id.bannerWebView)
-
+    private fun setupWebView() {
         with(webView.settings) {
             javaScriptEnabled = true
             domStorageEnabled = true
@@ -50,6 +66,9 @@ class BannerWebActivity : AppCompatActivity() {
             loadWithOverviewMode = true
             builtInZoomControls = false
             displayZoomControls = false
+            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            allowFileAccess = true
+            allowContentAccess = true
         }
 
         CookieManager.getInstance().apply {
@@ -57,36 +76,59 @@ class BannerWebActivity : AppCompatActivity() {
             setAcceptThirdPartyCookies(webView, true)
         }
 
-        webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean {
-                val clickedUrl = request?.url.toString()
-                Log.d("BannerWebActivity", "Клик по ссылке: $clickedUrl")
-
-                // Если нужно открыть в новом окне — делаем это
-                val intent = intent
-                intent.putExtra("url", clickedUrl)
-                finish() // Закрываем текущую
-                startActivity(intent) // Открываем новую
-
-                return true // Мы сами обработали переход
-            }
-
-            // (опционально) для старых версий API
-            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                url?.let {
-                    Log.d("BannerWebActivity", "Клик по ссылке (old API): $url")
-
-                    val intent = intent
-                    intent.putExtra("url", url)
-                    finish()
-                    startActivity(intent)
-                }
-                return true
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onShowFileChooser(
+                webView: WebView?,
+                filePathCallback: ValueCallback<Array<Uri>>,
+                fileChooserParams: FileChooserParams
+            ): Boolean {
+                // Реализуй здесь выбор файлов при необходимости
+                return false
             }
         }
-        webView.webChromeClient = WebChromeClient()
 
-        webView.loadUrl(url)
+        webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                val url = request?.url.toString()
+                Log.d("BannerWebActivity", "Клик по ссылке: $url")
+
+                // Обработка кастомных диплинков
+                when {
+                    url.startsWith("dln://") -> {
+                        val newUrl = url.replace("dln://", "https://")
+                        openExternalBrowser(newUrl)
+                        return true
+                    }
+                    url.startsWith("tg://") ||
+                            url.startsWith("viber://") ||
+                            url.startsWith("whatsapp://") ||
+                            url.startsWith("privat24:") ||
+                            url.startsWith("https://diia.app") -> {
+                        try {
+                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                        } catch (e: ActivityNotFoundException) {
+                            Toast.makeText(this@BannerWebActivity, "Lost", Toast.LENGTH_SHORT).show()
+                        }
+                        return true
+                    }
+                    url.startsWith("http://") || url.startsWith("https://") -> {
+                        // Открываем в текущем WebView
+                        return false
+                    }
+                    else -> return false
+                }
+            }
+
+            override fun onReceivedError(
+                view: WebView,
+                request: WebResourceRequest,
+                error: WebResourceError
+            ) {
+                if (request.isForMainFrame) {
+                    showNoInternet()
+                }
+            }
+        }
     }
 
     override fun onBackPressed() {
@@ -95,5 +137,48 @@ class BannerWebActivity : AppCompatActivity() {
         } else {
             super.onBackPressed()
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        webView.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        webView.onResume()
+        if (!isOnline()) showNoInternet()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        webView.saveState(outState)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        webView.restoreState(savedInstanceState)
+    }
+
+    private fun showNoInternet() {
+        webView.visibility = View.GONE
+        noInternetLayout.visibility = View.VISIBLE
+    }
+
+    private fun showWebView() {
+        webView.visibility = View.VISIBLE
+        noInternetLayout.visibility = View.GONE
+    }
+
+    private fun isOnline(): Boolean {
+        val connectivityManager = getSystemService<ConnectivityManager>()
+        val network = connectivityManager?.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network)
+        return capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+    }
+
+    private fun openExternalBrowser(url: String) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        startActivity(intent)
     }
 }
