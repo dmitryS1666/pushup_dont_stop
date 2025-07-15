@@ -20,6 +20,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Push Up Don’t Stop"
+rootProject.name = "Pin Result"
 include(":app")
  

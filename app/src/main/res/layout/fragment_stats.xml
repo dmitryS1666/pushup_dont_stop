@@ -18,7 +18,7 @@
         <ImageView
             android:id="@+id/manWithHand"
             android:layout_width="130pt"
-            android:layout_height="350dp"
+            android:layout_height="370dp"
             android:layout_gravity="bottom|center_horizontal"
             android:scaleType="fitStart"
             android:src="@drawable/man_with_hand" />
