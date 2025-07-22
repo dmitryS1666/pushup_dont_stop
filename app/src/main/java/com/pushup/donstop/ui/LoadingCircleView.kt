@@ -51,7 +51,7 @@ class LoadingCircleView @JvmOverloads constructor(
         super.onSizeChanged(w, h, oldw, oldh)
         centerX = w / 2f
         centerY = h / 2f
-        radius = (min(w, h) / 3f) - dotRadius
+        radius = (min(w, h) / 2.5f) - dotRadius
     }
 
     override fun onDraw(canvas: Canvas) {

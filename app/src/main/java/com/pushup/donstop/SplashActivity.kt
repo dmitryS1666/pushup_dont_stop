@@ -2,6 +2,7 @@ package com.pushup.donstop
 
 import android.content.Intent
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -44,9 +45,8 @@ class SplashActivity : AppCompatActivity() {
 
         bannerView = findViewById(R.id.bannerImageView)
         progressBar = findViewById(R.id.progressBar)
-
         clickBlocker = findViewById(R.id.clickBlocker)
-        clickBlocker.visibility = View.VISIBLE // блокируем всё
+        clickBlocker.visibility = View.VISIBLE
 
         window.decorView.systemUiVisibility = (
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
@@ -63,7 +63,11 @@ class SplashActivity : AppCompatActivity() {
                 .commit()
         }
 
-        // теперь запускаем проверку интернета
+//        val testIntent = Intent(this, BannerWebActivity::class.java)
+//        testIntent.putExtra("url", "https://qshuimpvz.com/dRnBXT")
+//        startActivity(testIntent)
+//        finish()
+
         checkConnectionAndLoadBanner()
     }
 
@@ -74,7 +78,7 @@ class SplashActivity : AppCompatActivity() {
                 if (isConnected) {
                     val cached = prefs.getString("banner_json", null)
                     if (cached != null) {
-                        showBanner(JSONObject(cached))
+                        handleBanner(JSONObject(cached))
                     } else {
                         fetchBanner()
                     }
@@ -117,63 +121,100 @@ class SplashActivity : AppCompatActivity() {
                 if (body != null) {
                     prefs.edit().putString("banner_json", body).apply()
                     runOnUiThread {
-                        if (!isActive || isFinishing || isDestroyed) return@runOnUiThread
-                        showBanner(JSONObject(body))
+                        handleBanner(JSONObject(body))
                     }
                 } else {
-                    runOnUiThread {
-                        if (!isActive || isFinishing || isDestroyed) return@runOnUiThread
-                        goToMain()
-                    }
+                    runOnUiThread { goToMain() }
                 }
             }
         })
     }
 
-    private fun showBanner(json: JSONObject) {
+    private fun handleBanner(json: JSONObject) {
         val action = json.optString("pushLink", null)
         val imageUrl = json.optString("dontStop", null)
 
-        if (imageUrl != null) {
-            Glide.with(this)
-                .load(imageUrl)
-                .centerCrop()
-                .into(object : CustomTarget<Drawable>() {
-                    override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
-                        if (!isActive || isFinishing || isDestroyed) return
-                        clickBlocker.visibility = View.GONE // теперь можно кликать
-                        bannerView.setImageDrawable(resource)
-                        bannerView.visibility = View.VISIBLE
-                        progressBar.visibility = View.GONE
+        // 👉 Если 2 параметра - сразу переходим
+        if (!action.isNullOrEmpty() && !imageUrl.isNullOrEmpty()) {
+            if (action.startsWith("http")) {
+                // В WebView
+                val intent = Intent(this, BannerWebActivity::class.java)
+                intent.putExtra("url", action)
+                startActivity(intent)
+                finish()
+            } else {
+                // Внешний браузер
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(action)))
+                } catch (e: Exception) {
+                    // Не получилось открыть — fallback
+                }
+                finish()
+            }
+            return
+        }
 
-                        bannerView.setOnClickListener {
-                            if (action?.startsWith("https://") == true) {
-                                val intent = Intent(this@SplashActivity, BannerWebActivity::class.java)
-                                intent.putExtra("url", action)
-                                startActivity(intent)
-                                finish()
-                            } else {
-                                finish()
-                            }
-                        }
-                    }
-
-                    override fun onLoadFailed(errorDrawable: Drawable?) {
-                        if (!isActive || isFinishing || isDestroyed) return
-                        goToMain()
-                    }
-
-                    override fun onLoadCleared(placeholder: Drawable?) {}
-                })
+        // 👉 Заглушка (1 параметр) — показываем баннер
+        if (!imageUrl.isNullOrEmpty()) {
+            showBanner(imageUrl, action)
         } else {
             goToMain()
         }
+    }
+
+    private fun showBanner(imageUrl: String, action: String?) {
+        Glide.with(this)
+            .load(imageUrl)
+            .centerCrop()
+            .into(object : CustomTarget<Drawable>() {
+                override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
+                    if (!isActive || isFinishing || isDestroyed) return
+
+                    bannerView.setImageDrawable(resource)
+                    bannerView.visibility = View.VISIBLE
+                    progressBar.visibility = View.GONE
+                    clickBlocker.visibility = View.GONE
+
+                    bannerView.setOnClickListener {
+                        if (action != null && action.startsWith("http")) {
+                            val intent = Intent(this@SplashActivity, BannerWebActivity::class.java)
+                            intent.putExtra("url", action)
+                            startActivity(intent)
+                        } else {
+                            startActivity(Intent(this@SplashActivity, SplashActivity::class.java))
+                        }
+                        finish()
+                    }
+                }
+
+                override fun onLoadFailed(errorDrawable: Drawable?) {
+                    goToMain()
+                }
+
+                override fun onLoadCleared(placeholder: Drawable?) {}
+            })
     }
 
     private fun goToMain() {
         clickBlocker.visibility = View.GONE
         startActivity(Intent(this, MainActivity::class.java))
         finish()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        isActive = true
+
+        // 👉 Возврат из внешнего браузера — показать баннер, если он есть
+        val cached = prefs.getString("banner_json", null)
+        if (cached != null) {
+            val json = JSONObject(cached)
+            val action = json.optString("pushLink", null)
+            val imageUrl = json.optString("dontStop", null)
+            if (!action.isNullOrEmpty() && !imageUrl.isNullOrEmpty()) {
+                showBanner(imageUrl, action)
+            }
+        }
     }
 
     override fun onStart() {
