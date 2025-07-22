@@ -22,6 +22,8 @@ import androidx.activity.addCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.getSystemService
 import androidx.core.view.WindowCompat
@@ -29,6 +31,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import java.io.File
 import java.io.IOException
+import android.Manifest
+import android.hardware.camera2.CameraManager
 
 class BannerWebActivity : AppCompatActivity() {
 
@@ -47,7 +51,9 @@ class BannerWebActivity : AppCompatActivity() {
     private var lastPhotoFile: File? = null
     private lateinit var fileChooserLauncher: ActivityResultLauncher<Intent>
 
+    private val CAMERA_PERMISSION_REQUEST = 101
     private var pendingFileChooserParams: WebChromeClient.FileChooserParams? = null
+    private var pendingPermissionRequest: PermissionRequest? = null
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,6 +90,10 @@ class BannerWebActivity : AppCompatActivity() {
             filePathCallback = null
             cameraImageUri = null
         }
+
+        val cameraManager = getSystemService(CAMERA_SERVICE) as CameraManager
+        val cameraIds = cameraManager.cameraIdList
+        Log.d("CameraDebug", "Available cameras: ${cameraIds.joinToString()}")
 
         setupWebView()
 
@@ -144,7 +154,6 @@ class BannerWebActivity : AppCompatActivity() {
             allowContentAccess = true
 
             mediaPlaybackRequiresUserGesture = false
-            javaScriptEnabled = true
             domStorageEnabled = true
         }
 
@@ -159,17 +168,24 @@ class BannerWebActivity : AppCompatActivity() {
                 filePathCallback: ValueCallback<Array<Uri>>?,
                 fileChooserParams: FileChooserParams?
             ): Boolean {
+                // Очищаем старый callback
                 this@BannerWebActivity.filePathCallback?.onReceiveValue(null)
                 this@BannerWebActivity.filePathCallback = filePathCallback
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                    checkSelfPermission(android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+                if (ContextCompat.checkSelfPermission(this@BannerWebActivity, Manifest.permission.CAMERA)
+                    != PackageManager.PERMISSION_GRANTED
                 ) {
+                    // Сохраняем параметры выбора файла до разрешения
                     pendingFileChooserParams = fileChooserParams
-                    requestPermissions(arrayOf(android.Manifest.permission.CAMERA), 101)
-                    return true
+                    ActivityCompat.requestPermissions(
+                        this@BannerWebActivity,
+                        arrayOf(Manifest.permission.CAMERA),
+                        CAMERA_PERMISSION_REQUEST
+                    )
+                    return true // <--- ВАЖНО: НЕ продолжаем сейчас!
                 }
 
+                // Разрешение уже есть — сразу запускаем
                 launchFileChooser(fileChooserParams)
                 return true
             }
@@ -202,6 +218,33 @@ class BannerWebActivity : AppCompatActivity() {
                 customViewCallback = null
                 actionBar?.show()
             }
+
+            override fun onPermissionRequest(request: PermissionRequest?) {
+                val origin = request?.origin?.toString()
+                val resources = request?.resources
+
+                Log.d("WebViewPermission", "Запрошенные ресурсы: ${resources?.joinToString()} от $origin")
+
+                if (resources?.contains(PermissionRequest.RESOURCE_VIDEO_CAPTURE) == true) {
+                    // Сохраняем request до разрешения
+                    pendingPermissionRequest = request
+
+                    if (ContextCompat.checkSelfPermission(this@BannerWebActivity, Manifest.permission.CAMERA)
+                        != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        ActivityCompat.requestPermissions(
+                            this@BannerWebActivity,
+                            arrayOf(Manifest.permission.CAMERA),
+                            CAMERA_PERMISSION_REQUEST
+                        )
+                    } else {
+                        request.grant(resources)
+                    }
+                } else {
+                    // Автоматически одобряем другие типы (например, AUDIO)
+                    request?.grant(resources)
+                }
+            }
         }
 
         webView.webViewClient = object : WebViewClient() {
@@ -221,7 +264,7 @@ class BannerWebActivity : AppCompatActivity() {
                         try {
                             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                         } catch (e: ActivityNotFoundException) {
-                            Toast.makeText(this@BannerWebActivity, "Приложение не найдено", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@BannerWebActivity, "App not found", Toast.LENGTH_SHORT).show()
                         }
                         true
                     }
@@ -243,7 +286,7 @@ class BannerWebActivity : AppCompatActivity() {
 
                     Toast.makeText(
                         this@BannerWebActivity,
-                        "Не удалось открыть ссылку:\n$failingUrl\n\nПричина: $description",
+                        "Failed to open the link:\n$failingUrl\n\nReason: $description",
                         Toast.LENGTH_LONG
                     ).show()
 
@@ -258,23 +301,28 @@ class BannerWebActivity : AppCompatActivity() {
     }
 
     private fun launchFileChooser(fileChooserParams: WebChromeClient.FileChooserParams?) {
-        val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        val photoFile = createImageFile()
-        if (photoFile != null) {
-            cameraImageUri = FileProvider.getUriForFile(
-                this,
-                "${packageName}.fileprovider",
-                photoFile
-            )
-            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraImageUri)
-        }
-
-        val contentSelectionIntent = fileChooserParams?.createIntent()
-        val intentArray = if (takePictureIntent.resolveActivity(packageManager) != null) {
-            arrayOf(takePictureIntent)
+        // Проверяем разрешение ещё раз, на всякий случай
+        val intentArray = if (
+            ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        ) {
+            val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            val photoFile = createImageFile()
+            if (photoFile != null) {
+                cameraImageUri = FileProvider.getUriForFile(
+                    this,
+                    "${packageName}.fileprovider",
+                    photoFile
+                )
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraImageUri)
+                arrayOf(takePictureIntent)
+            } else {
+                emptyArray()
+            }
         } else {
             emptyArray()
         }
+
+        val contentSelectionIntent = fileChooserParams?.createIntent()
 
         val chooserIntent = Intent(Intent.ACTION_CHOOSER).apply {
             putExtra(Intent.EXTRA_INTENT, contentSelectionIntent)
@@ -322,17 +370,29 @@ class BannerWebActivity : AppCompatActivity() {
         noInternetLayout.visibility = View.VISIBLE
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    private fun checkCameraPermissionAndLoadUrl(url: String) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_REQUEST)
+        } else {
+            webView.loadUrl(url)
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 101) {
+
+        if (requestCode == CAMERA_PERMISSION_REQUEST) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                launchFileChooser(pendingFileChooserParams)
+                pendingPermissionRequest?.grant(pendingPermissionRequest?.resources)
             } else {
-                Toast.makeText(this, "Camera permission was not granted", Toast.LENGTH_SHORT).show()
-                filePathCallback?.onReceiveValue(null)
-                filePathCallback = null
+                pendingPermissionRequest?.deny()
+                Toast.makeText(this, "Camera permission not granted", Toast.LENGTH_SHORT).show()
             }
-            pendingFileChooserParams = null
+            pendingPermissionRequest = null
         }
     }
 
