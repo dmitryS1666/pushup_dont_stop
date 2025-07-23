@@ -56,7 +56,12 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_main)
         if (savedInstanceState == null) {
-            openLoadingFragment()
+            val skipLoading = intent.getBooleanExtra("skip_loading", false)
+            if (!skipLoading) {
+                openLoadingFragment()
+            } else {
+                openMainFragment()
+            }
         }
 
         hideSystemUI()

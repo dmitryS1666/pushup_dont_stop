@@ -9,7 +9,10 @@ import android.os.Looper
 import android.view.View
 import android.widget.ImageView
 import android.widget.ProgressBar
+import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
+import androidx.media3.common.util.Log
+import androidx.media3.common.util.UnstableApi
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
@@ -71,11 +74,15 @@ class SplashActivity : AppCompatActivity() {
         checkConnectionAndLoadBanner()
     }
 
+    @OptIn(UnstableApi::class)
     private fun checkConnectionAndLoadBanner() {
         Thread {
             val isConnected = checkInternetAccess()
             runOnUiThread {
                 if (isConnected) {
+                    for ((key, value) in prefs.all) {
+                        Log.d("RESPONSE", "$key: $value")
+                    }
                     val cached = prefs.getString("banner_json", null)
                     if (cached != null) {
                         handleBanner(JSONObject(cached))
@@ -167,6 +174,7 @@ class SplashActivity : AppCompatActivity() {
             .load(imageUrl)
             .centerCrop()
             .into(object : CustomTarget<Drawable>() {
+                @OptIn(UnstableApi::class)
                 override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
                     if (!isActive || isFinishing || isDestroyed) return
 
@@ -176,12 +184,16 @@ class SplashActivity : AppCompatActivity() {
                     clickBlocker.visibility = View.GONE
 
                     bannerView.setOnClickListener {
+                        Log.d("setOnClickListener", "$action")
                         if (action != null && action.startsWith("http")) {
                             val intent = Intent(this@SplashActivity, BannerWebActivity::class.java)
                             intent.putExtra("url", action)
                             startActivity(intent)
                         } else {
-                            startActivity(Intent(this@SplashActivity, SplashActivity::class.java))
+                            val intent = Intent(this@SplashActivity, MainActivity::class.java)
+                            intent.putExtra("skip_loading", true)
+                            startActivity(intent)
+                            finish()
                         }
                         finish()
                     }
